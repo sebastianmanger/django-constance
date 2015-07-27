@@ -52,12 +52,13 @@ if not six.PY3:
     long_value = long(long_value)
 
 CONSTANCE_ADDITIONAL_FIELDS = {
-     'yes_no_null_select': ['django.forms.fields.ChoiceField',
-         {
-         'widget': 'django.forms.Select',
-         'choices': (("-----", None), ("yes", "Yes"), ("no", "No"))
-         }],
-     }
+    'yes_no_null_select': [
+        'django.forms.fields.ChoiceField',
+        {
+            'widget': 'django.forms.Select',
+            'choices': (("-----", None), ("yes", "Yes"), ("no", "No"))
+        }],
+}
 
 CONSTANCE_CONFIG = {
     'INT_VALUE': (1, 'some int'),
@@ -72,6 +73,7 @@ CONSTANCE_CONFIG = {
     'DATE_VALUE': (date(2010, 12, 24), 'Merry Chrismas'),
     'TIME_VALUE': (time(23, 59, 59), 'And happy New Year'),
     'CHOICE_VALUE': ('yes', 'select yes or no', 'yes_no_null_select'),
+    'EMAIL_LIST_VALUE': ('test@test.com', "E-mail address list; use ',' as separator", 'email_list_value'),
 }
 
 DEBUG = True
