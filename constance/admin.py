@@ -1,20 +1,26 @@
+import copy
 from datetime import datetime, date, time
 from decimal import Decimal
+import hashlib
 from operator import itemgetter
-import copy
-import six
 
 from django import forms
 from django.contrib import admin, messages
 from django.contrib.admin import widgets
 from django.contrib.admin.options import csrf_protect_m
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ImproperlyConfigured
 from django.forms import fields
 from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template.context import RequestContext
+from django.utils import six
 from django.utils.formats import localize
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
+
+try:
+    from django.utils.encoding import smart_bytes
+except ImportError:
+    from django.utils.encoding import smart_str as smart_bytes
 
 try:
     from django.conf.urls import patterns, url
@@ -22,7 +28,9 @@ except ImportError:  # Django < 1.4
     from django.conf.urls.defaults import patterns, url
 
 
-from constance import config, settings
+from . import LazyConfig, settings
+
+config = LazyConfig()
 
 
 NUMERIC_WIDGET = forms.TextInput(attrs={'size': 10})
@@ -52,8 +60,12 @@ if not six.PY3:
 
 
 class ConstanceForm(forms.Form):
-    def __init__(self, *args, **kwargs):
-        super(ConstanceForm, self).__init__(*args, **kwargs)
+    version = forms.CharField(widget=forms.HiddenInput)
+
+    def __init__(self, initial, *args, **kwargs):
+        super(ConstanceForm, self).__init__(*args, initial=initial, **kwargs)
+        version_hash = hashlib.md5()
+
         for name, options in settings.CONFIG.items():
             default, help_text = options[0], options[1]
             attrs = None
@@ -63,11 +75,23 @@ class ConstanceForm(forms.Form):
             if attrs and attrs['choices']:
                 kwargs = copy.copy(kwargs)
                 kwargs['widget'] = forms.Select(choices = attrs['choices'])
+
             self.fields[name] = field_class(label=name, **kwargs)
 
+            version_hash.update(smart_bytes(initial.get(name, '')))
+        self.initial['version'] = version_hash.hexdigest()
+
     def save(self):
-        for name in self.cleaned_data:
+        for name in settings.CONFIG:
             setattr(config, name, self.cleaned_data[name])
+
+    def clean_version(self):
+        value = self.cleaned_data['version']
+        if value != self.initial['version']:
+            raise forms.ValidationError(_('The settings have been modified '
+                                          'by someone else. Please reload the '
+                                          'form and resubmit your changes.'))
+        return value
 
 
 class ConstanceAdmin(admin.ModelAdmin):
@@ -95,7 +119,7 @@ class ConstanceAdmin(admin.ModelAdmin):
             **dict(config._backend.mget(settings.CONFIG.keys())))
         form = ConstanceForm(initial=initial)
         if request.method == 'POST':
-            form = ConstanceForm(request.POST)
+            form = ConstanceForm(data=request.POST, initial=initial)
             if form.is_valid():
                 form.save()
                 # In django 1.5 this can be replaced with self.message_user
