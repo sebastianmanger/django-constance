@@ -15,7 +15,6 @@ from django.template.context import RequestContext
 from django.utils import six
 from django.utils.formats import localize
 from django.utils.translation import ugettext_lazy as _
-import django
 
 try:
     from django.utils.encoding import smart_bytes
@@ -28,6 +27,7 @@ except ImportError:  # Django < 1.4
     from django.conf.urls.defaults import patterns, url
 
 
+from .utils import import_module_attr
 from . import LazyConfig, settings
 
 config = LazyConfig()
@@ -52,13 +52,14 @@ FIELDS = {
     float: (fields.FloatField, {'widget': NUMERIC_WIDGET}),
 }
 
-def parse_additional_fields(fields):
-   for key in fields:
-      field = fields[key]
-      field[0] = eval(field[0])
-      if 'widget' in field[1]:
-         field[1]['widget'] = eval(field[1]['widget'])
-   return fields
+
+def parse_additional_fields(additional_fields):
+    for key in additional_fields:
+        field = additional_fields[key]
+        field[0] = import_module_attr(field[0])
+        if 'widget' in field[1]:
+            field[1]['widget'] = import_module_attr(field[1]['widget'])
+    return additional_fields
 
 
 FIELDS.update(parse_additional_fields(settings.ADDITIONAL_FIELDS))
