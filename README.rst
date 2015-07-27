@@ -16,3 +16,16 @@ If you have questions or have trouble using the app please file a bug report
 at:
 
 https://github.com/jezdez/django-constance/issues
+
+
+Features
+--------
+
+* Add choice-field (merged from ```https://github.com/PetrDlouhy/django-constance```):
+
+.. code-block:: python
+
+    CONSTANCE_CONFIG = {
+        'MY_SETTINGS_KEY': (42, 'the answer to everything'),
+        'MY_SELECT_KEY': ('yes', 'select yes or no', {'choices': (('yes', 'Yes'), ('no', 'No'))}),
+    }
