@@ -27,6 +27,7 @@ except ImportError:  # Django < 1.4
     from django.conf.urls.defaults import patterns, url
 
 
+from .fields import EmailListValue
 from .utils import import_module_attr
 from . import LazyConfig, settings
 
@@ -50,6 +51,7 @@ FIELDS = {
     date: (fields.DateField, {'widget': widgets.AdminDateWidget}),
     time: (fields.TimeField, {'widget': widgets.AdminTimeWidget}),
     float: (fields.FloatField, {'widget': NUMERIC_WIDGET}),
+    'email_list_value': (EmailListValue, {}),
 }
 
 

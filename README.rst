@@ -36,3 +36,13 @@ Features
         'MY_SETTINGS_KEY': (42, 'the answer to everything'),
         'MY_SELECT_KEY': ('emotional', 'Select emotional or static', 'yes_no_select'),
     }
+
+* New field type: email list, useful for your email recipients.
+
+.. code-block:: python
+
+    CONSTANCE_CONFIG = {
+        "DEFAULT_EMAIL_RECIPIENT":
+        ('test@test.com', _(u"Standard receiver e-mail address; use ',' as separator"), 'email_list_value'),
+    }
+    CONSTANCE_EMAIL_VALUES_SEPARATOR = ';'  # default: ','
