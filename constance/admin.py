@@ -1,4 +1,3 @@
-import copy
 from datetime import datetime, date, time
 from decimal import Decimal
 import hashlib
@@ -16,6 +15,7 @@ from django.template.context import RequestContext
 from django.utils import six
 from django.utils.formats import localize
 from django.utils.translation import ugettext_lazy as _
+import django
 
 try:
     from django.utils.encoding import smart_bytes
@@ -52,6 +52,17 @@ FIELDS = {
     float: (fields.FloatField, {'widget': NUMERIC_WIDGET}),
 }
 
+def parse_additional_fields(fields):
+   for key in fields:
+      field = fields[key]
+      field[0] = eval(field[0])
+      if 'widget' in field[1]:
+         field[1]['widget'] = eval(field[1]['widget'])
+   return fields
+
+
+FIELDS.update(parse_additional_fields(settings.ADDITIONAL_FIELDS))
+
 if not six.PY3:
     FIELDS.update({
         long: INTEGER_LIKE,
@@ -68,14 +79,19 @@ class ConstanceForm(forms.Form):
 
         for name, options in settings.CONFIG.items():
             default, help_text = options[0], options[1]
-            attrs = None
-            if len(options) > 2:
-                attrs = options[2]
-            field_class, kwargs = FIELDS[type(default)]
-            if attrs and attrs['choices']:
-                kwargs = copy.copy(kwargs)
-                kwargs['widget'] = forms.Select(choices = attrs['choices'])
+            if len(options) == 3:
+               config_type = options[2]
+            else:
+               config_type = type(default)
 
+            if config_type not in FIELDS:
+                raise ImproperlyConfigured(_("Constance doesn't support "
+                                             "config values of the type "
+                                             "%(config_type)s. Please fix "
+                                             "the value of '%(name)s'.")
+                                           % {'config_type': config_type,
+                                              'name': name})
+            field_class, kwargs = FIELDS[config_type]
             self.fields[name] = field_class(label=name, **kwargs)
 
             version_hash.update(smart_bytes(initial.get(name, '')))
