@@ -21,11 +21,18 @@ https://github.com/jezdez/django-constance/issues
 Features
 --------
 
-* Add choice-field (merged from ```https://github.com/PetrDlouhy/django-constance```):
+* Add configurable additional fields (merged from ```https://github.com/PetrDlouhy/django-constance```):
 
 .. code-block:: python
 
+    CONSTANCE_ADDITIONAL_FIELDS = {
+        'yes_no_select': ['django.forms.fields.ChoiceField', {
+            'widget': 'django.forms.Select',
+            'choices': (("emotional", _("Emotional")), ("static", _("Static")))
+        }],
+    }
+
     CONSTANCE_CONFIG = {
         'MY_SETTINGS_KEY': (42, 'the answer to everything'),
-        'MY_SELECT_KEY': ('yes', 'select yes or no', {'choices': (('yes', 'Yes'), ('no', 'No'))}),
+        'MY_SELECT_KEY': ('emotional', 'Select emotional or static', 'yes_no_select'),
     }
