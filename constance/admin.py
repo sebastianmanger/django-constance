@@ -1,7 +1,9 @@
 from datetime import datetime, date, time
 from decimal import Decimal
+from django.utils.timezone import now
 import hashlib
 from operator import itemgetter
+from os import utime
 
 from django import forms
 from django.contrib import admin, messages
@@ -13,6 +15,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template.context import RequestContext
 from django.utils import six
+from django.utils.dateformat import format as date_format
 from django.utils.formats import localize
 from django.utils.translation import ugettext_lazy as _
 
@@ -103,6 +106,12 @@ class ConstanceForm(forms.Form):
     def save(self):
         for name in settings.CONFIG:
             setattr(config, name, self.cleaned_data[name])
+
+        # Touch the file to restart the server, if setting is available.
+        if settings.TOUCH_FILE:
+            with open(settings.TOUCH_FILE, 'a'):
+                now_timestamp = int(date_format(now(), 'U'))
+                utime(settings.TOUCH_FILE, (now_timestamp, now_timestamp))
 
     def clean_version(self):
         value = self.cleaned_data['version']
