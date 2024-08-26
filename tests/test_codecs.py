@@ -24,6 +24,8 @@ class TestJSONSerialization(TestCase):
         self.boolean = True
         self.none = None
         self.timedelta = timedelta(days=1, hours=2, minutes=3)
+        self.dict = {'test': 'test'}
+        self.list = ['test']
 
     def test_serializes_and_deserializes_default_types(self):
         self.assertEqual(dumps(self.datetime), '{"__type__": "datetime", "__value__": "2023-10-05T15:30:00"}')
@@ -37,6 +39,8 @@ class TestJSONSerialization(TestCase):
         self.assertEqual(dumps(self.boolean), '{"__type__": "default", "__value__": true}')
         self.assertEqual(dumps(self.none), '{"__type__": "default", "__value__": null}')
         self.assertEqual(dumps(self.timedelta), '{"__type__": "timedelta", "__value__": 93780.0}')
+        self.assertEqual(dumps(self.dict), '{"__type__": "default", "__value__": {"test": "test"}}')
+        self.assertEqual(dumps(self.list), '{"__type__": "default", "__value__": ["test"]}')
         for t in (
             self.datetime,
             self.date,
